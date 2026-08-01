@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -69,7 +70,7 @@ with :: a -> With a
 with = With
 {-# INLINE with #-}
 
-instance (CurryN fn' fn, r ~ r') => Bind (With (fn -> r)) fn' r' where
+instance (CurryN fn', Curried fn' ~ fn, r ~ r') => Bind (With (fn -> r)) fn' r' where
   With f >>= g = f (curryN g)
   {-# INLINE (>>=) #-}
 
@@ -77,36 +78,44 @@ instance (a ~ a', r ~ r') => Then (With (a -> r)) a' r' where
   With f >> x = f x
   {-# INLINE (>>) #-}
 
-class CurryN fn fn' | fn -> fn' where
-  curryN :: fn -> fn'
+class CurryN f where
+  type Curried f
+  curryN :: f -> Curried f
 
 -- Main instance
-instance CurryN (a -> b) (a -> b) where
+instance CurryN (a -> b) where
+  type Curried (a -> b) = a -> b
   curryN = id
   {-# INLINE curryN #-}
 
 -- Support for trailing lambdas with multiple parameters
 
-instance CurryN ((# #) -> a) a where
+instance CurryN ((# #) -> a) where
+  type Curried ((# #) -> a) = a
   curryN f = f (# #)
   {-# INLINE curryN #-}
 
-instance CurryN ((# a #) -> b) (a -> b) where
+instance CurryN ((# a #) -> b) where
+  type Curried ((# a #) -> b) = a -> b
   curryN f a = f (# a #)
   {-# INLINE curryN #-}
 
-instance CurryN ((# a, b #) -> c) (a -> b -> c) where
+instance CurryN ((# a, b #) -> c) where
+  type Curried ((# a, b #) -> c) = a -> b -> c
   curryN f a b = f (# a, b #)
   {-# INLINE curryN #-}
 
-instance CurryN ((# a, b, c #) -> d) (a -> b -> c -> d) where
+instance CurryN ((# a, b, c #) -> d) where
+  type Curried ((# a, b, c #) -> d) = a -> b -> c -> d
   curryN f a b c = f (# a, b, c #)
   {-# INLINE curryN #-}
 
-instance CurryN ((# a, b, c, d #) -> e) (a -> b -> c -> d -> e) where
+instance CurryN ((# a, b, c, d #) -> e) where
+  type Curried ((# a, b, c, d #) -> e) = a -> b -> c -> d -> e
   curryN f a b c d = f (# a, b, c, d #)
   {-# INLINE curryN #-}
 
-instance CurryN ((# a, b, c, d, e #) -> f) (a -> b -> c -> d -> e -> f) where
+instance CurryN ((# a, b, c, d, e #) -> f) where
+  type Curried ((# a, b, c, d, e #) -> f) = a -> b -> c -> d -> e -> f
   curryN f a b c d e = f (# a, b, c, d, e #)
   {-# INLINE curryN #-}
