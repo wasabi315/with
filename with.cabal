@@ -7,7 +7,7 @@ homepage:       https://github.com/wasabi315/with#readme
 bug-reports:    https://github.com/wasabi315/with/issues
 author:         Satoshi Takimoto
 maintainer:     wasabi.nvim.st@gmail.com
-copyright:      2026 Saoshi Takimoto
+copyright:      2026 Satoshi Takimoto
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
