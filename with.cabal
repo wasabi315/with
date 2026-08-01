@@ -2,7 +2,7 @@ cabal-version: 3.4
 
 name:           with
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/with#readme>
+description:    Please see the README on GitHub at <https://github.com/wasabi315/with#readme>
 homepage:       https://github.com/wasabi315/with#readme
 bug-reports:    https://github.com/wasabi315/with/issues
 author:         Satoshi Takimoto
