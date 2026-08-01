@@ -21,12 +21,35 @@ infixl 1 >>
 --------------------------------------------------------------------------------
 
 class Bind a b c where
-  -- | Generalized '(Prelude.>>=)' used by QualifiedDo. See "With".
+  -- | Generalized monadic bind used by QualifiedDo. See "With".
+  --
+  -- Example types:
+  --
+  -- @
+  -- -- ordinary monadic bind
+  -- (>>=) :: 'Monad' m => m a -> (a -> m b) -> m b
+  -- -- with, one-argument trailing lambda
+  -- (>>=) :: t'With' ((a -> b) -> r) -> (a -> b) -> r
+  -- -- with, two-argument trailing lambda
+  -- (>>=) :: t'With' ((a -> b -> c) -> r) -> ((# a, b #) -> c) -> r
+  -- ...
+  -- @
   (>>=) :: a -> b -> c
 
 class Then a b c where
-  -- | Generalized '(Prelude.>>)' used by QualifiedDo. See "With".
+  -- | Generalized monadic sequencing used by QualifiedDo. See "With".
+  --
+  -- Example types:
+  --
+  -- @
+  -- -- ordinary monadic sequencing
+  -- (>>) :: 'Monad' m => m a -> m b -> m b
+  -- -- with, without binding
+  -- (>>) :: t'With' (a -> r) -> a -> r
+  -- @
   (>>) :: a -> b -> c
+
+-- Fall back to the standard monad operations
 
 instance {-# OVERLAPPABLE #-} (Monad m, a ~ m a', b ~ (a' -> m b'), c ~ m b') => Bind a b c where
   (>>=) = (Prelude.>>=)
@@ -46,11 +69,11 @@ with :: a -> With a
 with = With
 {-# INLINE with #-}
 
-instance {-# OVERLAPPING #-} (CurryN fn' fn, r ~ r') => Bind (With (fn -> r)) fn' r' where
+instance (CurryN fn' fn, r ~ r') => Bind (With (fn -> r)) fn' r' where
   With f >>= g = f (curryN g)
   {-# INLINE (>>=) #-}
 
-instance {-# OVERLAPPING #-} (a ~ a', r ~ r') => Then (With (a -> r)) a' r' where
+instance (a ~ a', r ~ r') => Then (With (a -> r)) a' r' where
   With f >> x = f x
   {-# INLINE (>>) #-}
 
@@ -58,7 +81,7 @@ class CurryN fn fn' | fn -> fn' where
   curryN :: fn -> fn'
 
 -- Main instance
-instance {-# OVERLAPPING #-} CurryN (a -> b) (a -> b) where
+instance CurryN (a -> b) (a -> b) where
   curryN = id
   {-# INLINE curryN #-}
 
