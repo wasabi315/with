@@ -1,6 +1,6 @@
 # with
 
-Emulate [Koka's with statement](https://koka-lang.github.io/koka/doc/book.html#sec-with) using QualifiedDo.
+QualifiedDo notation for mixing monadic actions with [Koka-style with statements](https://koka-lang.github.io/koka/doc/book.html#sec-with).
 
 ```haskell
 {-# LANGUAGE QualifiedDo #-}
