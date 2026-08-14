@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -8,18 +7,18 @@
 -- | Internal API for "With".
 module With.Internal
   ( Bind (..),
-    Then (..),
-    With (..),
-    with,
-    CurryN (..),
+    (With.Internal.>>),
   )
 where
 
 infixl 1 >>=
 
-infixl 1 >>
-
 --------------------------------------------------------------------------------
+
+-- | Standard monadic sequencing used by QualifiedDo. See "With".
+(>>) :: (Monad m) => m a -> m b -> m b
+(>>) = (Prelude.>>)
+{-# INLINE (>>) #-}
 
 class Bind a b c where
   -- | Generalized monadic bind used by QualifiedDo. See "With".
@@ -29,26 +28,15 @@ class Bind a b c where
   -- @
   -- -- ordinary monadic bind
   -- (>>=) :: 'Monad' m => m a -> (a -> m b) -> m b
+  -- -- with, without binding
+  -- (>>=) :: (a -> r) -> ((# #) -> a) -> r
   -- -- with, one-argument trailing lambda
-  -- (>>=) :: t'With' ((a -> b) -> r) -> (a -> b) -> r
+  -- (>>=) :: ((a -> b) -> r) -> ((# a #) -> b) -> r
   -- -- with, two-argument trailing lambda
-  -- (>>=) :: t'With' ((a -> b -> c) -> r) -> ((# a, b #) -> c) -> r
+  -- (>>=) :: ((a -> b -> c) -> r) -> ((# a, b #) -> c) -> r
   -- ...
   -- @
   (>>=) :: a -> b -> c
-
-class Then a b c where
-  -- | Generalized monadic sequencing used by QualifiedDo. See "With".
-  --
-  -- Instance types include:
-  --
-  -- @
-  -- -- ordinary monadic sequencing
-  -- (>>) :: 'Monad' m => m a -> m b -> m b
-  -- -- with, without binding
-  -- (>>) :: t'With' (a -> r) -> a -> r
-  -- @
-  (>>) :: a -> b -> c
 
 -- Fall back to the standard monad operations
 
@@ -56,66 +44,33 @@ instance {-# OVERLAPPABLE #-} (Monad m, a ~ m a', b ~ (a' -> m b'), c ~ m b') =>
   (>>=) = (Prelude.>>=)
   {-# INLINE (>>=) #-}
 
-instance {-# OVERLAPPABLE #-} (Monad m, a ~ m a', b ~ m b', c ~ m b') => Then a b c where
-  (>>) = (Prelude.>>)
-  {-# INLINE (>>) #-}
-
 --------------------------------------------------------------------------------
+-- With statements
 
--- | Marks a function for @with@ semantics.
-newtype With a = With a
-
--- | Use a function as a @with@ statement.
-with :: a -> With a
-with = With
-{-# INLINE with #-}
-
-instance (CurryN fn', Curried fn' ~ fn, r ~ r') => Bind (With (fn -> r)) fn' r' where
-  With f >>= g = f (curryN g)
+instance (a ~ a', r ~ r') => Bind (a -> r) ((# #) -> a') r' where
+  f >>= g = f (g (# #))
   {-# INLINE (>>=) #-}
 
-instance (a ~ a', r ~ r') => Then (With (a -> r)) a' r' where
-  With f >> x = f x
-  {-# INLINE (>>) #-}
+instance (a ~ a', b ~ b', r ~ r') => Bind ((a -> b) -> r) ((# a' #) -> b') r' where
+  f >>= g = f (\a -> g (# a #))
+  {-# INLINE (>>=) #-}
 
-class CurryN fn where
-  type Curried fn
-  curryN :: fn -> Curried fn
+instance (a ~ a', b ~ b', c ~ c', r ~ r') => Bind ((a -> b -> c) -> r) ((# a', b' #) -> c') r' where
+  f >>= g = f (\a b -> g (# a, b #))
+  {-# INLINE (>>=) #-}
 
--- Main instance
-instance CurryN (a -> b) where
-  type Curried (a -> b) = a -> b
-  curryN = id
-  {-# INLINE curryN #-}
+instance (a ~ a', b ~ b', c ~ c', d ~ d', r ~ r') => Bind ((a -> b -> c -> d) -> r) ((# a', b', c' #) -> d') r' where
+  f >>= g = f (\a b c -> g (# a, b, c #))
+  {-# INLINE (>>=) #-}
 
--- Support for trailing lambdas with multiple parameters
+instance (a ~ a', b ~ b', c ~ c', d ~ d', e ~ e', r ~ r') => Bind ((a -> b -> c -> d -> e) -> r) ((# a', b', c', d' #) -> e') r' where
+  f >>= g = f (\a b c d -> g (# a, b, c, d #))
+  {-# INLINE (>>=) #-}
 
-instance CurryN ((# #) -> a) where
-  type Curried ((# #) -> a) = a
-  curryN f = f (# #)
-  {-# INLINE curryN #-}
+instance (a ~ a', b ~ b', c ~ c', d ~ d', e ~ e', f ~ f', r ~ r') => Bind ((a -> b -> c -> d -> e -> f) -> r) ((# a', b', c', d', e' #) -> f') r' where
+  f >>= g = f (\a b c d e -> g (# a, b, c, d, e #))
+  {-# INLINE (>>=) #-}
 
-instance CurryN ((# a #) -> b) where
-  type Curried ((# a #) -> b) = a -> b
-  curryN f = \a -> f (# a #)
-  {-# INLINE curryN #-}
-
-instance CurryN ((# a, b #) -> c) where
-  type Curried ((# a, b #) -> c) = a -> b -> c
-  curryN f = \a b -> f (# a, b #)
-  {-# INLINE curryN #-}
-
-instance CurryN ((# a, b, c #) -> d) where
-  type Curried ((# a, b, c #) -> d) = a -> b -> c -> d
-  curryN f = \a b c -> f (# a, b, c #)
-  {-# INLINE curryN #-}
-
-instance CurryN ((# a, b, c, d #) -> e) where
-  type Curried ((# a, b, c, d #) -> e) = a -> b -> c -> d -> e
-  curryN f = \a b c d -> f (# a, b, c, d #)
-  {-# INLINE curryN #-}
-
-instance CurryN ((# a, b, c, d, e #) -> f) where
-  type Curried ((# a, b, c, d, e #) -> f) = a -> b -> c -> d -> e -> f
-  curryN f = \a b c d e -> f (# a, b, c, d, e #)
-  {-# INLINE curryN #-}
+instance (a ~ a', b ~ b', c ~ c', d ~ d', e ~ e', f ~ f', g ~ g', r ~ r') => Bind ((a -> b -> c -> d -> e -> f -> g) -> r) ((# a', b', c', d', e', f' #) -> g') r' where
+  f >>= g = f (\a b c d e f -> g (# a, b, c, d, e, f #))
+  {-# INLINE (>>=) #-}
