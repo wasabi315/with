@@ -7,7 +7,6 @@ module Main where
 import Control.Exception
 import Control.Monad.IO.Class
 import Data.Foldable
-import System.IO
 import Text.Printf
 import With
 

@@ -1,4 +1,5 @@
 -- | QualifiedDo notation for mixing monadic actions with [Koka-style with statements](https://koka-lang.github.io/koka/doc/book.html#sec-with).
+-- Existing @do@ blocks can generally be replaced with @With.do@ unchanged.
 --
 -- > {-# LANGUAGE QualifiedDo #-}
 -- > {-# LANGUAGE UnboxedTuples #-}
@@ -23,7 +24,7 @@
 -- >   (# k, v #) <- with (forPair_ [("foo", 1), ("bar", 2)])
 -- >   printf "n = %d, k = %s, v = %d\n" n k v
 --
--- With statements are first-class and can be named and reused.
+-- With statements can be abstracted into reusable helper functions:
 --
 -- > defer :: IO () -> With (IO a -> IO a)
 -- > defer cleanup = with (`finally` cleanup)
@@ -31,15 +32,6 @@
 -- > main = With.do
 -- >   defer (putStrLn "Bye!")
 -- >   putStrLn "Hello!"
---
--- == Limitation
---
--- A polymorphic monadic statement whose result could be a function may require additional type information:
---
--- > With.do
--- >   n <- pure 42 :: IO Int
--- >   m <- pure @IO 42 -- with -XTypeApplications
--- >   ...
 module With
   ( -- * Core API
     With,

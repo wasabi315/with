@@ -1,9 +1,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UnliftedNewtypes #-}
 
 -- | Internal API for "With".
 module With.Internal
@@ -15,13 +17,15 @@ module With.Internal
   )
 where
 
+import GHC.Exts
+
 infixl 1 >>=
 
 infixl 1 >>
 
 --------------------------------------------------------------------------------
 
-class Bind a b c where
+class Bind (a :: TYPE r) b c where
   -- | Generalized monadic bind used by QualifiedDo. See "With".
   --
   -- Instance types include:
@@ -37,7 +41,7 @@ class Bind a b c where
   -- @
   (>>=) :: a -> b -> c
 
-class Then a b c where
+class Then (a :: TYPE r) b c where
   -- | Generalized monadic sequencing used by QualifiedDo. See "With".
   --
   -- Instance types include:
@@ -52,30 +56,33 @@ class Then a b c where
 
 -- Fall back to the standard monad operations
 
-instance {-# OVERLAPPABLE #-} (Monad m, a ~ m a', b ~ (a' -> m b'), c ~ m b') => Bind a b c where
+instance (Monad m, a ~ m a', b ~ (a' -> m b'), c ~ m b') => Bind a b c where
   (>>=) = (Prelude.>>=)
   {-# INLINE (>>=) #-}
 
-instance {-# OVERLAPPABLE #-} (Monad m, a ~ m a', b ~ m b', c ~ m b') => Then a b c where
+instance (Monad m, a ~ m a', b ~ m b', c ~ m b') => Then a b c where
   (>>) = (Prelude.>>)
   {-# INLINE (>>) #-}
 
 --------------------------------------------------------------------------------
 
 -- | Marks a function for @with@ semantics.
-newtype With a = With a
+
+-- The non-lifted representation of @With@ is important; it keeps with statements
+-- distinct from ordinary monadic actions during instance resolution.
+newtype With a = With (# a #)
 
 -- | Use a function as a @with@ statement.
 with :: a -> With a
-with = With
+with a = With (# a #)
 {-# INLINE with #-}
 
 instance (CurryN fn', Curried fn' ~ fn, r ~ r') => Bind (With (fn -> r)) fn' r' where
-  With f >>= g = f (curryN g)
+  With (# f #) >>= g = f (curryN g)
   {-# INLINE (>>=) #-}
 
 instance (a ~ a', r ~ r') => Then (With (a -> r)) a' r' where
-  With f >> x = f x
+  With (# f #) >> x = f x
   {-# INLINE (>>) #-}
 
 class CurryN fn where
