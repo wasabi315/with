@@ -31,11 +31,11 @@ with1 f g = With.do x <- with f; g x
 with1' :: ((a -> b) -> r) -> (a -> b) -> r
 with1' f g = f (\a -> g a)
 
-with2 :: ((a -> b -> c) -> r) -> ((# a, b #) -> c) -> r
-with2 f g = With.do x <- with f; g x
+with2 :: ((a -> b -> c) -> r) -> (a -> b -> c) -> r
+with2 f g = With.do (# a, b #) <- with f; g a b
 
-with2' :: ((a -> b -> c) -> r) -> ((# a, b #) -> c) -> r
-with2' f g = f (\a b -> g (# a, b #))
+with2' :: ((a -> b -> c) -> r) -> (a -> b -> c) -> r
+with2' f g = f (\a b -> g a b)
 
 inspect $ 'bind === 'bind'
 inspect $ 'then_ === 'then_'
