@@ -2,6 +2,8 @@ cabal-version: 3.4
 
 name:           with
 version:        0.1.0.0
+category:       Control
+synopsis:       QualifiedDo for Koka-style with statements
 description:    Please see the README on GitHub at <https://github.com/wasabi315/with#readme>
 homepage:       https://github.com/wasabi315/with#readme
 bug-reports:    https://github.com/wasabi315/with/issues
@@ -13,6 +15,7 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
+extra-doc-files:
     CHANGELOG.md
 
 source-repository head
@@ -26,7 +29,6 @@ library
   hs-source-dirs: src
   build-depends: base >=4.15 && <5
   default-language: Haskell2010
-  ghc-options: -O2
 
 executable with-example
   hs-source-dirs: example
@@ -41,7 +43,6 @@ test-suite with-inspect
   hs-source-dirs: test
   main-is: Main.hs
   default-language: Haskell2010
-  ghc-options: -O2
   build-depends:
     , base >= 4.15 && <5
     , inspection-testing
