@@ -14,7 +14,7 @@ bind' :: (Monad m) => m a -> (a -> m b) -> m b
 bind' m f = do x <- m; f x
 
 then_ :: (Monad m) => m a -> m b -> m b
-then_ m n = m With.>> n
+then_ m n = With.do m; n
 
 then_' :: (Monad m) => m a -> m b -> m b
 then_' m n = do m; n
