@@ -1,4 +1,4 @@
-# with
+# with-do
 
 QualifiedDo notation for mixing monadic actions with [Koka-style with statements](https://koka-lang.github.io/koka/doc/book.html#sec-with).
 Existing `do` blocks can generally be replaced with `With.do` unchanged.
