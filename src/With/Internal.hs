@@ -24,7 +24,7 @@ infixl 1 >>
 class Bind a b c where
   -- | Generalized monadic bind used by QualifiedDo. See "With".
   --
-  -- Example types:
+  -- Instance types include:
   --
   -- @
   -- -- ordinary monadic bind
@@ -40,7 +40,7 @@ class Bind a b c where
 class Then a b c where
   -- | Generalized monadic sequencing used by QualifiedDo. See "With".
   --
-  -- Example types:
+  -- Instance types include:
   --
   -- @
   -- -- ordinary monadic sequencing
@@ -78,9 +78,9 @@ instance (a ~ a', r ~ r') => Then (With (a -> r)) a' r' where
   With f >> x = f x
   {-# INLINE (>>) #-}
 
-class CurryN f where
-  type Curried f
-  curryN :: f -> Curried f
+class CurryN fn where
+  type Curried fn
+  curryN :: fn -> Curried fn
 
 -- Main instance
 instance CurryN (a -> b) where
@@ -97,25 +97,25 @@ instance CurryN ((# #) -> a) where
 
 instance CurryN ((# a #) -> b) where
   type Curried ((# a #) -> b) = a -> b
-  curryN f a = f (# a #)
+  curryN f = \a -> f (# a #)
   {-# INLINE curryN #-}
 
 instance CurryN ((# a, b #) -> c) where
   type Curried ((# a, b #) -> c) = a -> b -> c
-  curryN f a b = f (# a, b #)
+  curryN f = \a b -> f (# a, b #)
   {-# INLINE curryN #-}
 
 instance CurryN ((# a, b, c #) -> d) where
   type Curried ((# a, b, c #) -> d) = a -> b -> c -> d
-  curryN f a b c = f (# a, b, c #)
+  curryN f = \a b c -> f (# a, b, c #)
   {-# INLINE curryN #-}
 
 instance CurryN ((# a, b, c, d #) -> e) where
   type Curried ((# a, b, c, d #) -> e) = a -> b -> c -> d -> e
-  curryN f a b c d = f (# a, b, c, d #)
+  curryN f = \a b c d -> f (# a, b, c, d #)
   {-# INLINE curryN #-}
 
 instance CurryN ((# a, b, c, d, e #) -> f) where
   type Curried ((# a, b, c, d, e #) -> f) = a -> b -> c -> d -> e -> f
-  curryN f a b c d e = f (# a, b, c, d, e #)
+  curryN f = \a b c d e -> f (# a, b, c, d, e #)
   {-# INLINE curryN #-}
