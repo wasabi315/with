@@ -35,3 +35,17 @@ executable with-example
   build-depends:
     , base >= 4.15 && <5
     , with
+
+test-suite with-inspect
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Main.hs
+  default-language: Haskell2010
+  ghc-options: -O2
+    -ddump-simpl -ddump-to-file
+    -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications
+    -dsuppress-module-prefixes -dsuppress-type-signatures -dsuppress-uniques
+  build-depends:
+    , base >= 4.15 && <5
+    , inspection-testing
+    , with
