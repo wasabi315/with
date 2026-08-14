@@ -24,6 +24,7 @@
 -- >   printf "n = %d, k = %s, v = %d\n" n k v
 module With
   ( -- * Core API
+    With,
     with,
     (With.Internal.>>=),
     (With.Internal.>>),
