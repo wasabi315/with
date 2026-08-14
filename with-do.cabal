@@ -1,7 +1,7 @@
 cabal-version: 3.4
 
 name:           with-do
-version:        0.1.0.0
+version:        0.1.0
 category:       Control
 synopsis:       QualifiedDo for Koka-style with statements
 description:    Please see the README on GitHub at <https://github.com/wasabi315/with-do#readme>
