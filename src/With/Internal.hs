@@ -54,8 +54,6 @@ class Then (a :: TYPE r) b c where
   -- @
   (>>) :: a -> b -> c
 
--- Fall back to the standard monad operations
-
 instance (Monad m, a ~ m a', b ~ (a' -> m b'), c ~ m b') => Bind a b c where
   (>>=) = (Prelude.>>=)
   {-# INLINE (>>=) #-}
@@ -77,11 +75,11 @@ with :: a -> With a
 with a = With (# a #)
 {-# INLINE with #-}
 
-instance (CurryN fn', Curried fn' ~ fn, r ~ r') => Bind (With (fn -> r)) fn' r' where
+instance (CurryN fn, a ~ (Curried fn -> r)) => Bind (With a) fn r where
   With (# f #) >>= g = f (curryN g)
   {-# INLINE (>>=) #-}
 
-instance (a ~ a', r ~ r') => Then (With (a -> r)) a' r' where
+instance (a ~ (b -> r)) => Then (With a) b r where
   With (# f #) >> x = f x
   {-# INLINE (>>) #-}
 
